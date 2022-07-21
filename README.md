@@ -13,7 +13,7 @@ npx cap sync
 
 <docgen-index>
 
-* [`init()`](#init)
+* [`initialize()`](#initialize)
 * [`login(...)`](#login)
 * [`logout()`](#logout)
 * [`call(...)`](#call)
@@ -26,10 +26,10 @@ npx cap sync
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-### init()
+### initialize()
 
 ```typescript
-init() => Promise<void>
+initialize() => Promise<void>
 ```
 
 Initialize plugin state

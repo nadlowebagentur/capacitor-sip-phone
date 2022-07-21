@@ -9,7 +9,7 @@ import type {
 export class SipPhoneControlWeb
   extends WebPlugin
   implements SipPhoneControlPlugin {
-  init(): Promise<void> {
+  initialize(): Promise<void> {
     return Promise.reject('Not implemented on Web platform');
   }
 

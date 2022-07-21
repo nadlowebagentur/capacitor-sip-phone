@@ -35,7 +35,7 @@ export interface SipPhoneControlPlugin {
   /**
    * Initialize plugin state
    */
-  init(): Promise<void>;
+  initialize(): Promise<void>;
 
   /**
    * Make login to the SIP
