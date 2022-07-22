@@ -1,5 +1,10 @@
 import Foundation
 import Capacitor
+import AVFoundation
+
+enum SipEvent: String {
+    case AccountStateChanged = "SIPAccountStateChanged", CallStateChanged = "SIPCallStateChanged";
+}
 
 /**
  * Please read the Capacitor iOS Plugin Development Guide
@@ -8,9 +13,46 @@ import Capacitor
 @objc(SipPhoneControlPlugin)
 public class SipPhoneControlPlugin: CAPPlugin {
     private let implementation = SipPhoneControl()
+    let session: AVAudioSession = AVAudioSession.sharedInstance()
     
-    @objc func initialize(_ call: CAPPluginCall) {
-        call.resolve()
+    override public func load() {
+        let registerStateChangedListener = { [self] in
+            NSLog("[SIP] Value of the isLoggedIn \(self.implementation.loggedIn)")
+            
+            self.notifyListeners(SipEvent.AccountStateChanged.rawValue, data: [
+                "isLoggedIn": self.implementation.loggedIn,
+                "testValue": "1212",
+                "testBool": true
+            ])
+        }
+        
+        implementation.registrationStateListener = registerStateChangedListener
+    }
+    
+    @objc override public func checkPermissions(_ call: CAPPluginCall) {
+        // TODO
+        call.unimplemented("TODO: implement this method")
+    }
+    
+    @objc override public func requestPermissions(_ call: CAPPluginCall) {
+        if (session.responds(to: #selector(AVAudioSession.requestRecordPermission(_:)))) {
+            AVAudioSession.sharedInstance().requestRecordPermission({(granted: Bool)-> Void in
+                if granted {
+                    print("granted")
+
+                    do {
+                        try self.session.setCategory(AVAudioSession.Category.playAndRecord)
+                        try self.session.setActive(true)
+                    }
+                    catch {
+
+                        print("Couldn't set Audio session category")
+                    }
+                } else{
+                    print("not granted")
+                }
+            })
+        }
     }
     
     @objc func login(_ call: CAPPluginCall) {
@@ -65,10 +107,12 @@ public class SipPhoneControlPlugin: CAPPlugin {
     }
     
     @objc func acceptCall(_ call: CAPPluginCall) {
-        call.reject("TODO: implement accept call")
+        call.unimplemented("TODO: implement accept call")
     }
     
     @objc func hangUp(_ call: CAPPluginCall) {
-        call.reject("TODO: implement hangUp")
+        if (implementation.isCallRunning) {
+            implementation.terminateCall()
+        }
     }
 }

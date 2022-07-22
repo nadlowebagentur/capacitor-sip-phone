@@ -19,6 +19,9 @@ class SipPhoneControl: ObservableObject {
     @Published var canChangeCamera : Bool = false
     @Published var remoteAddress : String = "sip:calldest@sip.linphone.org"
     
+    // event handlers
+    @Published var registrationStateListener: (() -> Void)?;
+    
     init()
     {
         LoggingService.Instance.logLevel = LogLevel.Debug
@@ -89,6 +92,10 @@ class SipPhoneControl: ObservableObject {
             } else if (state == .Cleared) {
                 self.loggedIn = false
             }
+            
+            if let callback = self.registrationStateListener {
+                callback()
+            }
         })
         
         mCore.addDelegate(delegate: mCoreDelegate)
@@ -115,6 +122,7 @@ class SipPhoneControl: ObservableObject {
             mCore.defaultAccount = mAccount
             
         } catch {
+            NSLog("[SIP] login error \(error.localizedDescription)")
             throw error
         }
     }

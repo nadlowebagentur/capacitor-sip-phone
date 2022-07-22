@@ -24,8 +24,6 @@ export interface SipOutgoingCallOptions {
   address: string;
 }
 
-export type LoginStatus = string;
-
 export enum SipEvent {
   AccountStateChanged = 'SIPAccountStateChanged',
   CallStateChanged = 'SIPCallStateChanged',
