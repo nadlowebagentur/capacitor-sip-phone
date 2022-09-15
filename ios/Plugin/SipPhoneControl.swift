@@ -6,9 +6,9 @@ class SipPhoneControl: ObservableObject {
     var mAccount: Account?
     var mCoreDelegate : CoreDelegate!
     
-    @Published var username : String = "user"
-    @Published var passwd : String = "pwd"
-    @Published var domain : String = "sip.example.org"
+    @Published var username : String = ""
+    @Published var passwd : String = ""
+    @Published var domain : String = ""
     @Published var loggedIn: Bool = false
     @Published var transportType : String = "UDP"
     
@@ -17,10 +17,11 @@ class SipPhoneControl: ObservableObject {
     @Published var isCallRunning : Bool = false
     @Published var isVideoEnabled : Bool = false
     @Published var canChangeCamera : Bool = false
-    @Published var remoteAddress : String = "sip:calldest@sip.linphone.org"
+    @Published var remoteAddress : String = ""
     
     // event handlers
     @Published var registrationStateListener: (() -> Void)?;
+    @Published var callStateListener: (() -> Void)?;
     
     init()
     {
@@ -84,6 +85,11 @@ class SipPhoneControl: ObservableObject {
                 self.canChangeCamera = false
             } else if (state == .Error) {
                 
+            }
+            
+            // notify changed call state
+            if let callback = self.callStateListener {
+                callback()
             }
         }, onAccountRegistrationStateChanged: { (core: Core, account: Account, state: RegistrationState, message: String) in
             NSLog("New registration state is \(state) for user id \( String(describing: account.params?.identityAddress?.asString()))\n")

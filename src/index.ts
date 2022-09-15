@@ -2,12 +2,17 @@ import { registerPlugin } from '@capacitor/core';
 
 import type { SipPhoneControlPlugin } from './definitions';
 
-const SipPhoneControl = registerPlugin<SipPhoneControlPlugin>(
+const SipPhoneControl: SipPhoneControlPlugin = registerPlugin<SipPhoneControlPlugin>(
   'SipPhoneControl',
   {
     web: () => import('./web').then(m => new m.SipPhoneControlWeb()),
   },
 );
 
-export * from './definitions';
+export {
+  SipEvent,
+  SipLoginOptions,
+  SipOutgoingCallOptions,
+} from './definitions';
+
 export { SipPhoneControl };

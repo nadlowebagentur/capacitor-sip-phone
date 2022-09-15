@@ -20,13 +20,18 @@ public class SipPhoneControlPlugin: CAPPlugin {
             NSLog("[SIP] Value of the isLoggedIn \(self.implementation.loggedIn)")
             
             self.notifyListeners(SipEvent.AccountStateChanged.rawValue, data: [
-                "isLoggedIn": self.implementation.loggedIn,
-                "testValue": "1212",
-                "testBool": true
+                "isLoggedIn": self.implementation.loggedIn
+            ])
+        }
+        
+        let callStateChangedListener = { [self] in
+            self.notifyListeners(SipEvent.CallStateChanged.rawValue, data: [
+                "isCallRunning": self.implementation.isCallRunning
             ])
         }
         
         implementation.registrationStateListener = registerStateChangedListener
+        implementation.callStateListener = callStateChangedListener
     }
     
     @objc override public func checkPermissions(_ call: CAPPluginCall) {

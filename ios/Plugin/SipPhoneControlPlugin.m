@@ -7,6 +7,7 @@ CAP_PLUGIN(SipPhoneControlPlugin, "SipPhoneControl",
            CAP_PLUGIN_METHOD(initialize, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(login, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(logout, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(call, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(acceptCall, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(hangUp, CAPPluginReturnPromise);
         
