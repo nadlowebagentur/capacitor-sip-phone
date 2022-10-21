@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import AVFoundation
+import Combine
 
 enum SipEvent: String {
     case AccountStateChanged = "SIPAccountStateChanged", CallStateChanged = "SIPCallStateChanged";
@@ -14,6 +15,7 @@ enum SipEvent: String {
 public class SipPhoneControlPlugin: CAPPlugin {
     private let implementation = SipPhoneControl()
     let session: AVAudioSession = AVAudioSession.sharedInstance()
+    var cancellableBag = Set<AnyCancellable>()
     
     override public func load() {
         let registerStateChangedListener = { [self] in
@@ -26,12 +28,22 @@ public class SipPhoneControlPlugin: CAPPlugin {
         
         let callStateChangedListener = { [self] in
             self.notifyListeners(SipEvent.CallStateChanged.rawValue, data: [
-                "isCallRunning": self.implementation.isCallRunning
+                "isCallRunning": self.implementation.isCallRunning,
+                "isCallIncoming": self.implementation.isCallIncoming,
+                "isCallOutgoing": self.implementation.isCallOutgoing,
             ])
         }
         
         implementation.registrationStateListener = registerStateChangedListener
         implementation.callStateListener = callStateChangedListener
+        
+        implementation.$loggedIn.sink { value in
+            registerStateChangedListener()
+        }.store(in: &cancellableBag)
+        
+        implementation.objectWillChange.sink {
+            callStateChangedListener()
+        }.store(in: &cancellableBag)
     }
     
     @objc override public func checkPermissions(_ call: CAPPluginCall) {
@@ -44,13 +56,13 @@ public class SipPhoneControlPlugin: CAPPlugin {
             AVAudioSession.sharedInstance().requestRecordPermission({(granted: Bool)-> Void in
                 if granted {
                     print("granted")
-
+                    
                     do {
                         try self.session.setCategory(AVAudioSession.Category.playAndRecord)
                         try self.session.setActive(true)
                     }
                     catch {
-
+                        
                         print("Couldn't set Audio session category")
                     }
                 } else{
@@ -61,6 +73,10 @@ public class SipPhoneControlPlugin: CAPPlugin {
     }
     
     @objc func login(_ call: CAPPluginCall) {
+        if let cb = implementation.registrationStateListener {
+            cb()
+        }
+        
         let transport = call.getString("transport", "UDP")
         
         let domain = call.getString("domain")
@@ -116,8 +132,6 @@ public class SipPhoneControlPlugin: CAPPlugin {
     }
     
     @objc func hangUp(_ call: CAPPluginCall) {
-        if (implementation.isCallRunning) {
-            implementation.terminateCall()
-        }
+        implementation.terminateCall()
     }
 }
