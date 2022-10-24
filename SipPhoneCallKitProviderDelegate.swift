@@ -4,6 +4,7 @@ import linphonesw
 import AVFoundation
 
 
+@objc
 class SipPhoneCallKitProviderDelegate : NSObject
 {
     private let provider: CXProvider
@@ -31,6 +32,8 @@ class SipPhoneCallKitProviderDelegate : NSObject
     
     func incomingCall()
     {
+        NSLog("[sip]: incomingCall")
+        
         activeCallUUID = UUID()
         let update = CXCallUpdate()
         update.remoteHandle = CXHandle(type:.generic, value: sipPhoneCtx.incomingCallName)
@@ -42,28 +45,28 @@ class SipPhoneCallKitProviderDelegate : NSObject
     {
         activeCallUUID = UUID()
         
-        let handle = CXHandle(type: .generic, value: "displayName")
-        let startCallAction = CXStartCallAction(call: activeCallUUID, handle: handle)
-        let transaction = CXTransaction(action: startCallAction)
-
-        mCallController.request(transaction, completion: { error in })
+        NSLog("[sip]: outgoingCallStarted \(activeCallUUID)")
         
-        provider.reportOutgoingCall(with: activeCallUUID, startedConnectingAt: Date()) // Report to CallKit
+        provider.reportOutgoingCall(with: activeCallUUID, startedConnectingAt: nil) // Report to CallKit
     }
     
     func outgoingCallConnected()
     {
-        provider.reportOutgoingCall(with: activeCallUUID, connectedAt: Date()) // Report to CallKit
+        NSLog("[sip]: outgoingCallConnected with ID \(activeCallUUID)")
+        
+        provider.reportOutgoingCall(with: activeCallUUID, connectedAt: nil) // Report to CallKit
     }
     
     func stopCall()
     {
+        NSLog("[sip]: [stopCall] activeCallUUID: \(String(describing: activeCallUUID))")
+        
         let endCallAction = CXEndCallAction(call: activeCallUUID)
         let transaction = CXTransaction(action: endCallAction)
-
-        mCallController.request(transaction, completion: { error in }) // Report to CallKit a call must end
         
-        // provider.reportCall(with: activeCallUUID, endedAt: Date(), reason: .remoteEnded)
+        mCallController.request(transaction, completion: { error in
+            NSLog("[sip]: stoCall error \(error)")
+        }) // Report to CallKit a call must end
     }
     
 }
@@ -78,7 +81,11 @@ extension SipPhoneCallKitProviderDelegate: CXProviderDelegate {
             if (sipPhoneCtx.mCall?.state != .End && sipPhoneCtx.mCall?.state != .Released)  {
                 try sipPhoneCtx.mCall?.terminate()
             }
-        } catch { NSLog(error.localizedDescription) }
+        } catch {
+            NSLog(error.localizedDescription)
+            
+            NSLog("[sip]: CXEndCallAction")
+        }
         
         sipPhoneCtx.isCallRunning = false
         sipPhoneCtx.isCallIncoming = false
@@ -99,7 +106,9 @@ extension SipPhoneCallKitProviderDelegate: CXProviderDelegate {
         action.fulfill()
     }
     
-    func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {}
+    func provider(_ provider: CXProvider, perform action: CXSetHeldCallAction) {
+        action.fulfill()
+    }
     func provider(_ provider: CXProvider, perform action: CXStartCallAction) {
         sipPhoneCtx.mCore.configureAudioSession()
         
@@ -108,10 +117,18 @@ extension SipPhoneCallKitProviderDelegate: CXProviderDelegate {
         
         action.fulfill()
     }
-    func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {}
-    func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {}
-    func provider(_ provider: CXProvider, timedOutPerforming action: CXAction) {}
-    func providerDidReset(_ provider: CXProvider) {}
+    func provider(_ provider: CXProvider, perform action: CXSetMutedCallAction) {
+        action.fulfill()
+    }
+    func provider(_ provider: CXProvider, perform action: CXPlayDTMFCallAction) {
+        action.fulfill()
+    }
+    func provider(_ provider: CXProvider, timedOutPerforming action: CXAction) {
+        action.fulfill()
+    }
+    func providerDidReset(_ provider: CXProvider) {
+        NSLog("[sip]: providerDidReset")
+    }
     
     func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
         sipPhoneCtx.mCore.activateAudioSession(actived: true)

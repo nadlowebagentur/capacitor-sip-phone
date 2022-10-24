@@ -71,6 +71,9 @@ class SipPhoneControl: ObservableObject {
             // which includes new incoming/outgoing calls
             self.callMsg = message
             
+            NSLog("[sip]: callMsg \(message)")
+            NSLog("[sip]: state \(state)")
+            
             if (state == .PushIncomingReceived){
                 // We're being called by someone (and app is in background)
                 self.mCall = call
@@ -130,9 +133,9 @@ class SipPhoneControl: ObservableObject {
                 // Call has been terminated by any side
                 
                 // Report to CallKit that the call is over, if the terminate action was initiated by other end of the call
-                if (self.isCallRunning) {
-                    self.mProviderDelegate.stopCall()
-                }
+                // if (self.isCallRunning) {
+                self.mProviderDelegate.stopCall()
+                //}
                 
                 self.remoteAddress = "Nobody yet"
                 
