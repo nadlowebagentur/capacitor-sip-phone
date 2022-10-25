@@ -45,6 +45,23 @@ class SipPhoneCallKitProviderDelegate : NSObject
     {
         activeCallUUID = UUID()
         
+        NSLog("[sip]: generate new UUID")
+        
+        let handle = CXHandle(type: .phoneNumber, value: "XXXXXXXXXX")
+
+        let startCallAction = CXStartCallAction(call: activeCallUUID, handle: handle)
+
+        let transaction = CXTransaction(action: startCallAction)
+
+        mCallController.request(transaction) { error in
+            if let error = error {
+                print("[sip]: Error requesting transaction: \(error)")
+            } else {
+                print("[sip]: Requested transaction successfully")
+            }
+        }
+
+        
         NSLog("[sip]: outgoingCallStarted \(activeCallUUID)")
         
         provider.reportOutgoingCall(with: activeCallUUID, startedConnectingAt: nil) // Report to CallKit
@@ -52,6 +69,7 @@ class SipPhoneCallKitProviderDelegate : NSObject
     
     func outgoingCallConnected()
     {
+        
         NSLog("[sip]: outgoingCallConnected with ID \(activeCallUUID)")
         
         provider.reportOutgoingCall(with: activeCallUUID, connectedAt: nil) // Report to CallKit
@@ -61,8 +79,7 @@ class SipPhoneCallKitProviderDelegate : NSObject
     {
         NSLog("[sip]: [stopCall] activeCallUUID: \(String(describing: activeCallUUID))")
         
-        let endCallAction = CXEndCallAction(call: activeCallUUID)
-        let transaction = CXTransaction(action: endCallAction)
+        let transaction = CXTransaction(action: CXEndCallAction(call: activeCallUUID!))
         
         mCallController.request(transaction, completion: { error in
             NSLog("[sip]: stoCall error \(error)")

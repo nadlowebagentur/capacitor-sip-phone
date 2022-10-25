@@ -93,19 +93,16 @@ class SipPhoneControl: ObservableObject {
                     self.mProviderDelegate.incomingCall()
                 }
                 self.remoteAddress = call.remoteAddress!.asStringUriOnly()
-            } else if (state == .OutgoingInit || state == .OutgoingProgress) {
+            } else if (state == .OutgoingInit) {
                 // When the 200 OK has been received
                 self.isCallIncoming = false
                 self.isCallOutgoing = true
                 
+                // repot outgoing call
                 self.mProviderDelegate.outgoingCallStarted()
             } else if (state == .OutgoingRinging) {
                 // This state will be reached upon reception of the 180 RINGING
             } else if (state == .Connected) {
-                if (self.isCallOutgoing) {
-                    self.mProviderDelegate.outgoingCallConnected()
-                }
-                
                 // When the 200 OK has been received
                 self.isCallIncoming = false
                 self.isCallOutgoing = false
@@ -114,12 +111,15 @@ class SipPhoneControl: ObservableObject {
                 // This state indicates the call is active.
                 // You may reach this state multiple times, for example after a pause/resume
                 // or after the ICE negotiation completes
-                // Wait for the call to be connected before allowing a call update
-                self.isCallRunning = true
                 
                 // Only enable toggle camera button if there is more than 1 camera
                 // We check if core.videoDevicesList.size > 2 because of the fake camera with static image created by our SDK (see below)
                 self.canChangeCamera = core.videoDevicesList.count > 2
+                
+                // report like connected
+                if (self.isCallOutgoing) {
+                    self.mProviderDelegate.outgoingCallConnected();
+                }
             } else if (state == .Paused) {
                 // When you put a call in pause, it will became Paused
                 self.canChangeCamera = false
@@ -133,9 +133,9 @@ class SipPhoneControl: ObservableObject {
                 // Call has been terminated by any side
                 
                 // Report to CallKit that the call is over, if the terminate action was initiated by other end of the call
-                // if (self.isCallRunning) {
-                self.mProviderDelegate.stopCall()
-                //}
+                if (self.isCallRunning) {
+                    self.mProviderDelegate.stopCall()
+                }
                 
                 self.remoteAddress = "Nobody yet"
                 
